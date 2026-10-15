@@ -134,6 +134,20 @@ def build_episode_jobs(
     return tuple(jobs)
 
 
+def configure_simulator_gpu(environment: BaseEnvironment,
+                            simulator_gpu_id: str | None) -> None:
+    """Pin one spawned simulator process to one physical render GPU."""
+    if simulator_gpu_id is None:
+        return
+    if not isinstance(simulator_gpu_id, str) or not simulator_gpu_id.strip():
+        raise ValueError('simulator_gpu_id must be a non-empty string')
+    gpu_id = simulator_gpu_id.strip()
+    environment.configure_simulator_device(gpu_id)
+    if not environment.requires_global_gpu_index:
+        os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
+    os.environ['MUJOCO_EGL_DEVICE_ID'] = gpu_id
+
+
 def configure_worker_lifetime(parent_pid: int | None = None) -> None:
     """Isolate a Linux worker and terminate it if its parent disappears."""
     if sys.platform != 'linux':

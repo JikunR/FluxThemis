@@ -13,6 +13,7 @@ class EnvironmentCaseRejected(RuntimeError):
 class BaseEnvironment(ABC):
     """Contract implemented by simulation and real-robot adapters."""
 
+    requires_global_gpu_index = False
     supports_native_video_recording = False
 
     def configure_worker(self, worker_id: str, run_id: str) -> None:

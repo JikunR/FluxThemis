@@ -24,7 +24,8 @@ from ...transports.zmq_protocol import (decode_frame, decode_header,
                                         encode_header)
 from .config import (distributed_video_settings,
                      load_distributed_evaluation_config)
-from .episode import EpisodeJob, configure_worker_lifetime, execute_episode
+from .episode import (EpisodeJob, configure_simulator_gpu,
+                      configure_worker_lifetime, execute_episode)
 
 
 class SimulatorWorkerSupervisor:
@@ -49,9 +50,6 @@ class SimulatorWorkerSupervisor:
         self._context = multiprocessing.get_context('spawn')
 
     def run(self) -> None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = self.device
-        os.environ.pop('LOCAL_RANK', None)
-        os.environ['MUJOCO_EGL_DEVICE_ID'] = self.device
         generation = 0
         while True:
             process = self._context.Process(
@@ -132,7 +130,7 @@ class _SimulatorWorker:
             environment = build_environment_from_cfg(
                 evaluation_cfg['environment'])
             environment.configure_worker(self.worker_id, self.deployment_id)
-            environment.configure_simulator_device(self.device)
+            configure_simulator_gpu(environment, self.device)
             environment.configure_video_recording(save_videos, video_dir)
             policy_client = build_policy_client_from_cfg(
                 evaluation_cfg['policy_client'])
